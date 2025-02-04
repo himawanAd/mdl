@@ -1,0 +1,58 @@
+# Cache dan Session Data
+cache/
+localcache/
+muc/
+sessions/
+temp/
+
+# Log dan Debug Files
+*.log
+error_log
+php_errors.log
+
+# Direktori hasil kompilasi dan build
+*.o
+*.so
+*.a
+*.la
+*.lo
+*.rej
+*.class
+*.swp
+*.bak
+*.out
+*.pyc
+*.pyo
+*.pyd
+
+# File sistem dan IDE
+.DS_Store
+Thumbs.db
+*.sw?
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+.vscode/
+.idea/
+*.iml
+
+# Paket Composer dan Node.js
+vendor/
+npm-debug.log
+yarn-error.log
+
+# Paket yang dihasilkan oleh PHPUnit atau alat testing lainnya
+coverage/
+phpunit.xml
+phpunit.xml.dist
+
+# Direktori hasil build dari Gulp atau Grunt
+dist/
+build/
+
+# Backup database atau file
+*.sql
+*.tar.gz
+*.zip
+*.bak
