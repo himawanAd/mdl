@@ -55,6 +55,22 @@ class mod_page_mod_form extends moodleform_mod {
         $mform->addRule('page', get_string('required'), 'required', null, 'client');
 
         //-------------------------------------------------------
+        $mform->addElement('header', 'monitoringsection', get_string('monitoringheader', 'page'));
+        $mform->addElement('advcheckbox', 'monitoringenabled', 
+            get_string('monitoringenabled', 'page'), 
+            get_string('monitoringenableddesc', 'page'));
+        $mform->setDefault('monitoringenabled', 0);
+        // Start monitoring datetime field
+        $mform->addElement('date_time_selector', 'startmonitoring', get_string('startmonitoring', 'page'));
+        $mform->setType('startmonitoring', PARAM_INT);
+        $mform->hideIf('startmonitoring', 'monitoringenabled', 'notchecked');
+
+        // Stop monitoring datetime field
+        $mform->addElement('date_time_selector', 'stopmonitoring', get_string('stopmonitoring', 'page'));
+        $mform->setType('stopmonitoring', PARAM_INT);
+        $mform->hideIf('stopmonitoring', 'monitoringenabled', 'notchecked');
+
+        //-------------------------------------------------------
         $mform->addElement('header', 'appearancehdr', get_string('appearance'));
 
         if ($this->current->instance) {

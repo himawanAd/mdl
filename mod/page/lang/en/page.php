@@ -72,3 +72,11 @@ $string['printlastmodified'] = 'Display last modified date';
 $string['printlastmodifiedexplain'] = 'Display last modified date below content?';
 $string['privacy:metadata'] = 'The Page resource plugin does not store any personal data.';
 $string['search:activity'] = 'Page';
+
+// Monitoring
+$string['monitoring'] = 'Monitoring';
+$string['monitoringheader'] = 'Device Activity Monitoring';
+$string['monitoringenabled'] = 'Enable monitoring';
+$string['monitoringenableddesc'] = 'If checked, student devices will be monitored while the session is active and this activity page is accessed.';
+$string['startmonitoring'] = 'Start monitoring';
+$string['stopmonitoring'] = 'Stop monitoring';
