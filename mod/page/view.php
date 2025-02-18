@@ -91,4 +91,8 @@ if (!isset($options['printlastmodified']) || !empty($options['printlastmodified'
     echo html_writer::div("$strlastmodified: " . userdate($page->timemodified), 'modified');
 }
 
+if (has_capability('mod/page:addinstance', $PAGE->context)) {
+    echo $OUTPUT->single_button(new moodle_url('/mod/monitoring/view.php',  array('id' => $cm->id)), 'Monitoring Report', 'post');
+}
+
 echo $OUTPUT->footer();
