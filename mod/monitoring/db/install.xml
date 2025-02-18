@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLDB PATH="mod/monitoring/db" VERSION="20240213" COMMENT="Monitoring plugin database definition">
+    <TABLES>
+        <TABLE NAME="monitoring_sessions" COMMENT="Stores monitoring session data">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="starttime" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="endtime" TYPE="int" LENGTH="10"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>
