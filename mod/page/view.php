@@ -95,4 +95,31 @@ if (has_capability('mod/page:addinstance', $PAGE->context)) {
     echo $OUTPUT->single_button(new moodle_url('/mod/monitoring/view.php',  array('id' => $cm->id)), 'Monitoring Report', 'post');
 }
 
+// Tampilkan alert monitoring untuk role student
+$roles = get_user_roles($context, $USER->id, true);
+$is_student = false;
+foreach ($roles as $role) {
+    if ($role->shortname == 'student') {
+        $is_student = true;
+        break;
+    }
+}
+
+if ($is_student) {
+    // Generate waktu statis random (misalnya antara 08:00 - 20:00)
+    $start_time = sprintf("%02d:%02d", rand(8, 18), rand(0, 59));
+    $end_time = sprintf("%02d:%02d", rand(19, 23), rand(0, 59));
+    
+    // Tampilkan alert menggunakan JavaScript
+    echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let userConfirmed = confirm(`Hi, $USER->firstname $USER->lastname\\nThere is an ongoing session:\\n\\nSession: $cm->name\\nTime: $start_time - $end_time\\n\\nBy continuing, you agree to allow device activity monitoring during this session. Monitoring will automatically stop if the session ends or you leave this page.\\n\\nDo you agree to proceed?`);
+            
+            // if (!userConfirmed) {
+            //     window.location.href = '/moodle/course/view.php?id=YOUR_COURSE_ID'; // Arahkan ke halaman lain jika user tidak setuju
+            // }
+        });
+    </script>";
+}
+
 echo $OUTPUT->footer();
