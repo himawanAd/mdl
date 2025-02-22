@@ -35,6 +35,10 @@ class mod_page_mod_form extends moodleform_mod {
 
         $mform = $this->_form;
 
+        // Ambil instance data jika ada (untuk edit form)
+        $instance = isset($this->_instance) ? $this->_instance : null;
+        $cmid = isset($this->_cm) ? $this->_cm->id : 0;
+
         $config = get_config('page');
 
         //-------------------------------------------------------
@@ -54,12 +58,19 @@ class mod_page_mod_form extends moodleform_mod {
         $mform->addElement('editor', 'page', get_string('content', 'page'), null, page_get_editor_options($this->context));
         $mform->addRule('page', get_string('required'), 'required', null, 'client');
 
-        //-------------------------------------------------------
+        //Pengaturan Monitoring
         $mform->addElement('header', 'monitoringsection', get_string('monitoringheader', 'page'));
         $mform->addElement('advcheckbox', 'monitoringenabled', 
             get_string('monitoringenabled', 'page'), 
             get_string('monitoringenableddesc', 'page'));
-        $mform->setDefault('monitoringenabled', 0);
+        if ($instance && $cmid) {
+            $record = $DB->get_record('course_modules', ['id' => $cmid], 'monitoring_enabled, start_monitoring, stop_monitoring');
+            $mform->setDefault('monitoringenabled', $record->monitoring_enabled);
+            $mform->setDefault('startmonitoring', $record->start_monitoring);
+            $mform->setDefault('stopmonitoring', $record->stop_monitoring);
+        } else {
+            $mform->setDefault('monitoringenabled', 0);
+        }
         // Start monitoring datetime field
         $mform->addElement('date_time_selector', 'startmonitoring', get_string('startmonitoring', 'page'));
         $mform->setType('startmonitoring', PARAM_INT);

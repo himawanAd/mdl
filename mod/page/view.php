@@ -91,8 +91,25 @@ if (!isset($options['printlastmodified']) || !empty($options['printlastmodified'
     echo html_writer::div("$strlastmodified: " . userdate($page->timemodified), 'modified');
 }
 
-if (has_capability('mod/page:addinstance', $PAGE->context)) {
-    echo $OUTPUT->single_button(new moodle_url('/mod/monitoring/view.php',  array('id' => $cm->id)), 'Monitoring Report', 'post');
+// Ambil status monitoring dan waktu mulai/berakhir
+$monitoringData = $DB->get_record('course_modules', ['id' => $cm->id], 'monitoring_enabled, start_monitoring, stop_monitoring');
+// Tampilkan status dan button mod/monitoring untuk role teacher
+if ($monitoringData && $monitoringData->monitoring_enabled) {
+    $startMonitoring = $monitoringData->start_monitoring ? userdate($monitoringData->start_monitoring) : 'Not set';
+    $stopMonitoring = $monitoringData->stop_monitoring ? userdate($monitoringData->stop_monitoring) : 'Not set';
+
+    // Pastikan user memiliki role teacher untuk menampilkan informasi ini
+    if (has_capability('mod/page:addinstance', $PAGE->context)) {
+        // Tampilkan informasi monitoring
+        echo "<div class='monitoring-info' style='margin: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;'>";
+        echo "<strong>Monitoring Status: </strong> Enabled <br>";
+        echo "<strong>Start Monitoring: </strong> $startMonitoring <br>";
+        echo "<strong>Stop Monitoring: </strong> $stopMonitoring <br>";
+        // Tampilkan tombol Monitoring Report
+        echo $OUTPUT->single_button(new moodle_url('/mod/monitoring/view.php',  array('id' => $cm->id)), 'Monitoring Report', 'post');
+        echo "</div>";
+
+    }
 }
 
 // Tampilkan alert monitoring untuk role student
@@ -105,21 +122,27 @@ foreach ($roles as $role) {
     }
 }
 
-if ($is_student) {
-    // Generate waktu statis random (misalnya antara 08:00 - 20:00)
-    $start_time = sprintf("%02d:%02d", rand(8, 18), rand(0, 59));
-    $end_time = sprintf("%02d:%02d", rand(19, 23), rand(0, 59));
+if ($is_student && $monitoringData->monitoring_enabled) {
+    // ambil monitoring time data 
+    $monitoringData = $DB->get_record('course_modules', ['id' => $cm->id], 'start_monitoring, stop_monitoring');
+    $currentTime = time();
+    $startTime = $monitoringData->start_monitoring;
+    $endTime = $monitoringData->stop_monitoring;
+    if ($startTime && $endTime && $currentTime >= $startTime && $currentTime <= $endTime) {
+        $startMonitoring = $monitoringData->start_monitoring ? userdate($monitoringData->start_monitoring) : 'Not set';
+        $stopMonitoring = $monitoringData->stop_monitoring ? userdate($monitoringData->stop_monitoring) : 'Not set';
     
-    // Tampilkan alert menggunakan JavaScript
-    echo "<script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let userConfirmed = confirm(`Hi, $USER->firstname $USER->lastname\\nThere is an ongoing session:\\n\\nSession: $cm->name\\nTime: $start_time - $end_time\\n\\nBy continuing, you agree to allow device activity monitoring during this session. Monitoring will automatically stop if the session ends or you leave this page.\\n\\nDo you agree to proceed?`);
-            
-            // if (!userConfirmed) {
-            //     window.location.href = '/moodle/course/view.php?id=YOUR_COURSE_ID'; // Arahkan ke halaman lain jika user tidak setuju
-            // }
-        });
-    </script>";
+        // Tampilkan alert menggunakan JavaScript
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let userConfirmed = confirm(`Hi, $USER->firstname $USER->lastname\\nThere is an ongoing session:\\n\\nSession: $cm->name\\nTime: $startMonitoring - $stopMonitoring\\n\\nBy continuing, you agree to allow device activity monitoring during this session. Monitoring will automatically stop if the session ends or you leave this page.\\n\\nDo you agree to proceed?`);
+                
+                // if (!userConfirmed) {
+                //     window.location.href = '/moodle/course/view.php?id=YOUR_COURSE_ID'; // Arahkan ke halaman lain jika user tidak setuju
+                // }
+            });
+        </script>";
+    }
 }
 
 echo $OUTPUT->footer();

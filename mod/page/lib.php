@@ -115,6 +115,11 @@ function page_add_instance($data, $mform = null) {
 
     $data->id = $DB->insert_record('page', $data);
 
+    // Simpan pengaturan monitoring ke tabel mdl_course_modules
+    $DB->set_field('course_modules', 'monitoring_enabled', $data->monitoringenabled, ['id' => $cmid]);
+    $DB->set_field('course_modules', 'start_monitoring', $data->startmonitoring, ['id' => $cmid]);
+    $DB->set_field('course_modules', 'stop_monitoring', $data->stopmonitoring, ['id' => $cmid]);
+
     // we need to use context now, so we need to make sure all needed info is already in db
     $DB->set_field('course_modules', 'instance', $data->id, array('id'=>$cmid));
     $context = context_module::instance($cmid);
@@ -161,6 +166,11 @@ function page_update_instance($data, $mform) {
     $data->contentformat = $data->page['format'];
 
     $DB->update_record('page', $data);
+
+    // Perbarui monitoring_enabled di mdl_course_modules
+    $DB->set_field('course_modules', 'monitoring_enabled', $data->monitoringenabled, ['id' => $cmid]);
+    $DB->set_field('course_modules', 'start_monitoring', $data->startmonitoring, ['id' => $cmid]);
+    $DB->set_field('course_modules', 'stop_monitoring', $data->stopmonitoring, ['id' => $cmid]);
 
     $context = context_module::instance($cmid);
     if ($draftitemid) {

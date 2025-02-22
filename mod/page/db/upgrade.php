@@ -58,5 +58,37 @@ function xmldb_page_upgrade($oldversion) {
     // Automatically generated Moodle v4.5.0 release upgrade line.
     // Put any upgrade step following this.
 
+    global $DB;
+
+    $dbman = $DB->get_manager(); // Dapatkan DB manager
+
+    // Periksa apakah versi lebih lama dari versi saat ini
+    if ($oldversion < 2025022202) { // Gunakan timestamp saat ini sebagai versi unik
+
+        // Definisikan kolom baru
+        $table = new xmldb_table('course_modules');
+        
+        // Tambahkan kolom monitoring_enabled
+        $field = new xmldb_field('monitoring_enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'completionexpected');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Tambah kolom start_monitoring
+        $field = new xmldb_field('start_monitoring', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'monitoring_enabled');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Tambah kolom stop_monitoring
+        $field = new xmldb_field('stop_monitoring', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'start_monitoring');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Perbarui versi database Moodle
+        upgrade_mod_savepoint(true, 2025022202, 'page');
+    }
+
     return true;
 }
