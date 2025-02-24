@@ -1,56 +1,29 @@
 <?php
     require_once(__DIR__ . '/../../config.php');
     require_once($CFG->libdir . '/accesslib.php');
+    $cmid = required_param('id', PARAM_INT);
+    $cm = get_coursemodule_from_id('page', $cmid, 0, false, MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+    $context = context_course::instance($course->id);
+    require_login($course->id);
 
-    $courseid = required_param('id', PARAM_INT);
-    require_login($courseid);
-    $context = context_course::instance($courseid);
     if (!has_capability('moodle/course:update', $context) && !has_capability('mod/monitoring:view', $context)) {
         throw new moodle_exception('accessdenied', 'error');
     }
 
-    $PAGE->set_url('/mod/monitoring/view.php', array('id' => $courseid));
+    $PAGE->set_url('/mod/monitoring/view.php', array('id' => $course->id));
     $PAGE->set_title(get_string('monitoring', 'mod_monitoring'));
 
-  $students = [
-        [
-            'name' => 'Himawan Addillah',
-            'nim' => 'M0518022',
-            'activity' => [
-                ['app' => 'Microsoft Edge', 'duration' => 15, 'percentage' => '46.04%', 'details' => [
-                    ['title' => 'Active Windows Tracker', 'start' => '18:24:36', 'end' => '18:24:41', 'duration' => 5],
-                    ['title' => 'Implementasi Tracker Web', 'start' => '18:24:41', 'end' => '18:24:45', 'duration' => 3],
-                ]],
-                ['app' => 'Windows Explorer', 'duration' => 8, 'percentage' => '23.98%', 'details' => [
-                    ['title' => 'Task Switching', 'start' => '18:24:47', 'end' => '18:24:50', 'duration' => 3],
-                ]]
-            ]
-        ],
-        [
-            'name' => 'Mahasiswa B',
-            'nim' => '789012',
-            'activity' => [
-                ['app' => 'Visual Studio Code', 'duration' => 7, 'percentage' => '20.99%', 'details' => [
-                    ['title' => 'script.js', 'start' => '18:24:50', 'end' => '18:24:57', 'duration' => 7],
-                ]],
-                ['app' => 'Microsoft Notes', 'duration' => 2, 'percentage' => '8.98%', 'details' => [
-                    ['title' => 'Sticky Notes', 'start' => '18:25:00', 'end' => '18:25:03', 'duration' => 2],
-                ]]
-            ]
-        ],
-        [
-            'name' => 'Mahasiswa C',
-            'nim' => '345678',
-            'activity' => [
-                ['app' => 'Microsoft Edge', 'duration' => 10, 'percentage' => '35.00%', 'details' => [
-                    ['title' => 'E-Learning Page', 'start' => '18:20:30', 'end' => '18:20:40', 'duration' => 10],
-                ]],
-                ['app' => 'Windows Explorer', 'duration' => 5, 'percentage' => '17.50%', 'details' => [
-                    ['title' => 'File Browsing', 'start' => '18:20:45', 'end' => '18:20:50', 'duration' => 5],
-                ]]
-            ]
-        ]
-    ];
+    $students = $DB->get_records_sql("
+        SELECT u.id, u.firstname, u.lastname, u.username 
+        FROM {user} u
+        JOIN {user_enrolments} ue ON u.id = ue.userid
+        JOIN {enrol} e ON ue.enrolid = e.id
+        JOIN {role_assignments} ra ON u.id = ra.userid
+        WHERE e.courseid = ? AND ra.contextid = ? AND ra.roleid = 5
+        ORDER BY u.username ASC", 
+        [$course->id, $context->id]
+    );
 ?>
 
 <!DOCTYPE html>
@@ -211,8 +184,8 @@
             </div>
         </div>
         <?php foreach ($students as $student): ?>
-            <div class="student" onclick="loadReport('<?php echo $student['name']; ?>', '<?php echo $student['nim']; ?>', <?php echo htmlspecialchars(json_encode($student['activity']), ENT_QUOTES, 'UTF-8'); ?>)">
-                <?php echo $student['name']; ?>
+            <div class="student" onclick="loadReport('<?php echo $student->firstname . " " . $student->lastname; ?>', '<?php echo $student->username; ?>')">
+                <?php echo $student->firstname . " " . $student->lastname; ?>
             </div>
         <?php endforeach; ?>
     </div>
