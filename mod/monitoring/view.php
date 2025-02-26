@@ -24,6 +24,15 @@
         ORDER BY u.username ASC", 
         [$course->id, $context->id]
     );
+
+    $monitoring_data = $DB->get_records_sql("
+        SELECT m.id, m.student_id, m.course_module_id, m.app_name, m.detail, m.start_time, m.end_time
+        FROM {monitoring} m
+        WHERE m.course_module_id = ?", 
+        [$cmid], 0, 0
+    );
+
+    $monitoring_json = json_encode(array_values($monitoring_data));
 ?>
 
 <!DOCTYPE html>
@@ -33,142 +42,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css"> <!-- Bisa dipisahkan ke file CSS eksternal -->
+    <link rel="stylesheet" href="styles.css">
     <title>View Report</title>
-    <style>
-      body {
-        font-family: "Nunito", sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-      }
-      h1,
-      h2,
-      h3 {
-        font-family: "Nunito", sans-serif;
-        font-weight: 700; /* Bold */
-      }
-
-      p,
-      td,
-      th {
-        font-family: "Nunito", sans-serif;
-        font-weight: 400; /* Regular */
-      }
-
-      .small-text {
-        font-family: "Nunito", sans-serif;
-        font-weight: 300; /* Light */
-        font-size: 0.9em;
-      }
-      .sidebar {
-        width: 20%;
-        background-color: #f8f9fa;
-        padding: 20px;
-        height: 100vh;
-        overflow-y: auto;
-      }
-      .student {
-        margin: 15px 0;
-        cursor: pointer;
-        padding: 10px;
-        border-radius: 5px;
-        transition: background-color 0.3s;
-      }
-      .student:hover {
-        background-color: #e9ecef;
-      }
-      .content {
-        flex: 1;
-        padding: 20px;
-      }
-      .box {
-        display: flex;
-        gap: 20px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
-        padding: 20px;
-      }
-      .profile {
-        flex: 1;
-        text-align: center;
-      }
-      .profile img {
-        border-radius: 50%;
-        width: 250px;
-        height: 250px;
-      }
-      .profile .name {
-        font-size: 1.5em;
-        margin: 10px 0;
-      }
-      .profile .nim {
-        font-size: 1em;
-        color: gray;
-      }
-      .report {
-        flex: 2;
-      }
-      .report table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .report th {
-        background-color: #ddd;
-      }
-      .report th,
-      .report td {
-        padding: 10px;
-        text-align: left;
-      }
-      .dropdown table {
-        margin-top: 10px;
-        border: 1px solid #ddd;
-        font-size: 0.9em;
-      }
-
-      .dropdown th,
-      .dropdown td {
-        padding: 8px;
-        border: 1px solid #ddd;
-        text-align: left;
-      }
-
-      .dropdown th {
-        background-color: #f8f9fa;
-        font-weight: bold;
-      }
-
-      .row:hover {
-        background-color: #f1f1f1;
-        cursor: pointer;
-      }
-
-      .dropdown {
-        display: none;
-      }
-
-      .dropdown.visible {
-        display: table-row;
-      }
-
-      .sidebar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sidebar-buttons button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            margin-left: 10px;
-        }
-        .sidebar-buttons button:hover {
-            color: #007bff;
-        }
-    </style>
 </head>
 <body>
     <div class="sidebar">
@@ -184,7 +59,7 @@
             </div>
         </div>
         <?php foreach ($students as $student): ?>
-            <div class="student" onclick="loadReport('<?php echo $student->firstname . " " . $student->lastname; ?>', '<?php echo $student->username; ?>')">
+            <div class="student" onclick="loadReport('<?php echo $student->firstname . " " . $student->lastname; ?>', '<?php echo $student->username; ?>','<?php echo $student->id; ?>')">
                 <?php echo $student->firstname . " " . $student->lastname; ?>
             </div>
         <?php endforeach; ?>
@@ -214,26 +89,53 @@
         </div>
     </div>
     <script>
-        function loadReport(name, nim, activity) {
+        let monitoringData = <?php echo $monitoring_json; ?>;
+        function loadReport(name, nim, studentId) {
             document.getElementById("profileName").textContent = name;
-            document.getElementById("profileNim").textContent = `NIM: ${nim}`;
+            document.getElementById("profileNim").textContent = nim;
             document.getElementById("reportBox").style.display = "flex";
-            let tableBody = document.getElementById("reportTableBody");
-            tableBody.innerHTML = ""; // Hapus isi tabel sebelumnya
 
-            activity.forEach((app) => {
-                // Buat baris utama (klik untuk toggle dropdown)
+            let tableBody = document.getElementById("reportTableBody");
+            tableBody.innerHTML = ""; // Hapus isi sebelumnya
+
+            // Filter data berdasarkan student_id yang dipilih
+            let filteredData = monitoringData.filter(item => item.student_id == studentId);
+
+            // Grupkan berdasarkan app_name
+            let appUsage = {};
+            filteredData.forEach(item => {
+                let duration = item.end_time - item.start_time;
+                if (!appUsage[item.app_name]) {
+                    appUsage[item.app_name] = { duration: 0, details: [] };
+                }
+                appUsage[item.app_name].duration += duration;
+                appUsage[item.app_name].details.push({
+                    title: item.detail,
+                    start: new Date(item.start_time * 1000).toLocaleTimeString(),
+                    end: new Date(item.end_time * 1000).toLocaleTimeString(),
+                    duration: duration
+                });
+            });
+
+            // Hitung total durasi
+            let totalDuration = Object.values(appUsage).reduce((sum, app) => sum + app.duration, 0);
+
+            // Tampilkan dalam tabel
+            Object.keys(appUsage).forEach(appName => {
+                let app = appUsage[appName];
+
+                // Baris utama
                 let row = document.createElement("tr");
                 row.classList.add("row");
                 row.setAttribute("onclick", "toggleDropdown(this)");
                 row.innerHTML = `
-                    <td>${app.app}</td>
+                    <td>${appName}</td>
                     <td>${app.duration} sec</td>
-                    <td>${app.percentage}</td>
+                    <td>${((app.duration / totalDuration) * 100).toFixed(2)}%</td>
                 `;
                 tableBody.appendChild(row);
 
-                // Buat dropdown untuk detail penggunaan aplikasi
+                // Dropdown detail
                 let dropdownRow = document.createElement("tr");
                 dropdownRow.classList.add("dropdown");
                 let detailsHtml = `
@@ -249,8 +151,7 @@
                             </thead>
                             <tbody>
                 `;
-
-                app.details.forEach((detail) => {
+                app.details.forEach(detail => {
                     detailsHtml += `
                         <tr>
                             <td>${detail.title}</td>
@@ -261,12 +162,7 @@
                     `;
                 });
 
-                detailsHtml += `
-                            </tbody>
-                        </table>
-                    </td>
-                `;
-
+                detailsHtml += `</tbody></table></td>`;
                 dropdownRow.innerHTML = detailsHtml;
                 tableBody.appendChild(dropdownRow);
             });
