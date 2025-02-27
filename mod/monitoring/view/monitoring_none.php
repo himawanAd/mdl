@@ -1,3 +1,6 @@
+<?php
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -6,7 +9,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <link rel="stylesheet" href="styles.css">
-        <title>Monitoring Page</title>
+        <title>Monitoring Unavailable</title>
     </head>
     <body>
         <div class="sidebar">
@@ -22,8 +25,10 @@
                 </div>
             </div>
         </div>
-        <div class="content">
-            <h2>Monitoring is not available</h2>
+        <div class="content-unavailable">
+            <div class="icon">⚠️</div> 
+            <h2>Monitoring Report is not available</h2>
+            <p>There is no monitoring data available at the moment.</p>
         </div>
         <script>
             function goHome() {

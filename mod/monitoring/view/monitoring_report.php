@@ -28,7 +28,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <link rel="stylesheet" href="styles.css">
-        <title>Monitoring Page</title>
+        <title>Monitoring Report</title>
     </head>
     <body>
         <div class="sidebar">
@@ -50,6 +50,16 @@
             <?php endforeach; ?>
         </div>
         <div class="content">
+            <div id="session-detail" class="box">
+                <div class="session-row">
+                    <p><strong>Course:</strong> <?php echo $course->fullname; ?></p>
+                    <p><strong>Section:</strong> <?php echo $activity_title; ?></p>
+                </div>
+                <div class="session-row">
+                    <p><strong>Start Monitoring:</strong> <?php echo date('d/m/Y H:i:s', $start_time); ?></p>
+                    <p><strong>End Monitoring:</strong> <?php echo date('d/m/Y H:i:s', $stop_time); ?></p>
+                </div>
+            </div>
             <div id="reportBox" class="box" style="display: none">
                 <div class="profile">
                     <img id="profilePic" src="profile.jpg" alt="Profile Picture">

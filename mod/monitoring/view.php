@@ -7,6 +7,18 @@
     $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
     $context = context_course::instance($course->id);
     require_login($course->id);
+    
+    // Cari nama activity
+    $module = $DB->get_record('modules', ['id' => $cm->module], '*', MUST_EXIST);
+    $modulename = $module->name; 
+    $instanceid = $cm->instance; 
+    $activity_title = "";
+    if ($DB->get_manager()->table_exists($modulename)) {
+        $activity = $DB->get_record($modulename, ['id' => $instanceid]);
+        if ($activity && isset($activity->name)) {
+            $activity_title = $activity->name;
+        }
+    }
 
     if (!has_capability('moodle/course:update', $context) && !has_capability('mod/monitoring:view', $context)) {
         throw new moodle_exception('accessdenied', 'error');
