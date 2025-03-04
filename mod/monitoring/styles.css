@@ -52,6 +52,9 @@ th {
   border-radius: 10px;
   padding: 20px;
 }
+#reportBox {
+  height: 75vh;
+}
 .profile {
   flex: 1;
   text-align: center;
@@ -74,6 +77,9 @@ th {
 }
 .report table {
   width: 100%;
+  max-height: 65vh;
+  overflow-y: auto;
+  display: block;
   border-collapse: collapse;
 }
 .report th {
@@ -85,8 +91,14 @@ th {
   text-align: left;
 }
 .dropdown table {
+  width: 100%;
+  max-height: 30vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: block;
   margin-top: 10px;
   border: 1px solid #ddd;
+  border-collapse: collapse;
   font-size: 0.9em;
 }
 
@@ -96,6 +108,30 @@ th {
   border: 1px solid #ddd;
   text-align: left;
 }
+
+.dropdown thead,
+.dropdown tbody {
+  display: table;
+  width: 100%;
+  table-layout: fixed; /* Memastikan lebar kolom tetap */
+}
+
+.dropdown th:nth-child(1),
+.dropdown td:nth-child(1) {
+  width: 45%;
+} /* Detail */
+.dropdown th:nth-child(2),
+.dropdown td:nth-child(2) {
+  width: 20%;
+} /* Start Time */
+.dropdown th:nth-child(3),
+.dropdown td:nth-child(3) {
+  width: 20%;
+} /* End Time */
+.dropdown th:nth-child(4),
+.dropdown td:nth-child(4) {
+  width: 15%;
+} /* Duration */
 
 .dropdown th {
   background-color: #f8f9fa;
@@ -109,6 +145,7 @@ th {
 
 .dropdown {
   display: none;
+  transition: all 0.3s ease;
 }
 
 .dropdown.visible {

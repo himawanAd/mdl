@@ -13,10 +13,10 @@
     $monitoring_data = $DB->get_records_sql("
         SELECT m.id, m.student_id, m.course_module_id, m.app_name, m.detail, m.start_time, m.end_time
         FROM {monitoring} m
-        WHERE m.course_module_id = ?", 
+        WHERE m.course_module_id = ?
+        ORDER BY m.id DESC",
         [$cmid], 0, 0
     );
-
     $monitoring_json = json_encode(array_values($monitoring_data));
 ?>
 
@@ -81,8 +81,10 @@
         <script>
             let monitoringData = <?php echo $monitoring_json; ?>;
             let students = <?php echo json_encode(array_values($students)); ?>;
+            let currentView = { type: "all" };
 
             function loadAllReport() {
+                currentView = { type: "all" };
                 document.getElementById("reportBox").style.display = "flex";
                 document.getElementById("profile").style.display = "none";
 
@@ -115,7 +117,7 @@
                             <td>${item.app_name}</td>
                             <td>${item.detail}</td>
                             <td>${new Date(item.start_time * 1000).toLocaleString()}</td>
-                            <td>${new Date(item.end_time * 1000).toLocaleString()}</td>
+                            <td>${item.end_time ? new Date(item.end_time * 1000).toLocaleString() : '-'}</td>
                         </tr>
                     `;
                     tableBody.innerHTML += row;
@@ -123,6 +125,7 @@
             }
             
             function loadReport(name, nim, studentId) {
+                currentView = { type: "student", name, nim, studentId };
                 document.getElementById("profileName").textContent = name;
                 document.getElementById("profileNim").textContent = nim;
                 document.getElementById("reportBox").style.display = "flex";
@@ -153,12 +156,29 @@
                             <td>${item.app_name}</td>
                             <td>${item.detail}</td>
                             <td>${new Date(item.start_time * 1000).toLocaleString()}</td>
-                            <td>${new Date(item.end_time * 1000).toLocaleString()}</td>
+                            <td>${item.end_time ? new Date(item.end_time * 1000).toLocaleString() : '-'}</td>
                         </tr>
                     `;
                     tableBody.innerHTML += row;
                 });
             }
+
+            function fetchMonitoringData() {
+                fetch(`ajax.php?cmid=<?php echo $cmid; ?>`)
+                    .then(response => response.json())
+                    .then(data => {
+                        monitoringData = data; // Perbarui data monitoring
+                        if (currentView.type === "all") {
+                            loadAllReport(); // Render ulang tabel
+                        } else if (currentView.type === "student"){
+                            loadReport(currentView.name, currentView.nim, currentView.studentId);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching data:', error));
+            }
+
+            // Jalankan polling setiap 1 detik
+            setInterval(fetchMonitoringData, 1000);
 
             function toggleDropdown(row) {
                 const nextRow = row.nextElementSibling;

@@ -136,12 +136,18 @@
                     let detailsHtml = `
                         <td colspan="3">
                             <table style="width: 100%; border-collapse: collapse">
+                                <colgroup>
+                                    <col style="width: 45%;">
+                                    <col style="width: 20%;">
+                                    <col style="width: 20%;">
+                                    <col style="width: 15%;">
+                                </colgroup>
                                 <thead>
                                     <tr style="background-color: #f8f9fa">
                                         <th>Detail</th>
                                         <th>Start Time</th>
                                         <th>End Time</th>
-                                        <th>Duration (sec)</th>
+                                        <th>Duration</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -152,7 +158,7 @@
                                 <td>${detail.title}</td>
                                 <td>${detail.start}</td>
                                 <td>${detail.end}</td>
-                                <td>${detail.duration}</td>
+                                <td>${formatDuration(detail.duration)}</td>
                             </tr>
                         `;
                     });
@@ -164,10 +170,30 @@
             }
 
             function toggleDropdown(row) {
+                const allDropdowns = document.querySelectorAll(".dropdown.visible");
+                allDropdowns.forEach(dropdown => {
+                    if (dropdown !== row.nextElementSibling) {
+                        dropdown.classList.remove("visible");
+                    }
+                });
+
                 const nextRow = row.nextElementSibling;
                 if (nextRow && nextRow.classList.contains("dropdown")) {
                     nextRow.classList.toggle("visible");
                 }
+            }
+
+            function formatDuration(seconds) {
+                let hours = Math.floor(seconds / 3600);
+                let minutes = Math.floor((seconds % 3600) / 60);
+                let secs = seconds % 60;
+
+                let result = [];
+                if (hours > 0) result.push(`${hours} hr`);
+                if (minutes > 0) result.push(`${minutes} min`);
+                if (secs > 0 || result.length === 0) result.push(`${secs} sec`);
+
+                return result.join(" ");
             }
 
             function goHome() {
