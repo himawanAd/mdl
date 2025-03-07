@@ -30,7 +30,7 @@
         <link rel="stylesheet" href="styles.css">
         <title>Monitoring Live Report</title>
     </head>
-    <body>
+    <body id="mod-monitoring">
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>Monitoring</h2>

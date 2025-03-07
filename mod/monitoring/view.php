@@ -33,7 +33,7 @@
     $stop_time = $cm->stop_monitoring;
 
     if ($current_time > $stop_time) {
-        require_once(__DIR__ . '/view/monitoring_live.php');
+        require_once(__DIR__ . '/view/monitoring_report.php');
     } elseif ($current_time >= $start_time && $current_time <= $stop_time) {
         require_once(__DIR__ . '/view/monitoring_live.php');
     } else {

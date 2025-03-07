@@ -1,50 +1,53 @@
-body {
+#mod-monitoring {
   font-family: "Nunito", sans-serif;
   margin: 0;
   padding: 0;
   display: flex;
 }
-h1,
-h2,
-h3 {
-  font-family: "Nunito", sans-serif;
+
+#mod-monitoring h1,
+#mod-monitoring h2,
+#mod-monitoring h3 {
   font-weight: 700; /* Bold */
 }
 
-p,
-td,
-th {
-  font-family: "Nunito", sans-serif;
+#mod-monitoring p,
+#mod-monitoring td,
+#mod-monitoring th {
   font-weight: 400; /* Regular */
 }
 
-.small-text {
-  font-family: "Nunito", sans-serif;
+#mod-monitoring .small-text {
   font-weight: 300; /* Light */
   font-size: 0.9em;
 }
-.sidebar {
+
+#mod-monitoring .sidebar {
   width: 20%;
   background-color: #f8f9fa;
   padding: 20px;
   height: 100vh;
   overflow-y: auto;
 }
-.student {
+
+#mod-monitoring .student {
   margin: 15px 0;
   cursor: pointer;
   padding: 10px;
   border-radius: 5px;
   transition: background-color 0.3s;
 }
-.student:hover {
+
+#mod-monitoring .student:hover {
   background-color: #e9ecef;
 }
-.content {
+
+#mod-monitoring .content {
   flex: 1;
   padding: 20px;
 }
-.box {
+
+#mod-monitoring .box {
   display: flex;
   gap: 20px;
   margin-bottom: 4px;
@@ -52,45 +55,55 @@ th {
   border-radius: 10px;
   padding: 20px;
 }
-#reportBox {
+
+#mod-monitoring #reportBox {
   height: 75vh;
 }
-.profile {
+
+#mod-monitoring .profile {
   flex: 1;
   text-align: center;
 }
-.profile img {
+
+#mod-monitoring .profile img {
   border-radius: 50%;
   width: 250px;
   height: 250px;
 }
-.profile .name {
+
+#mod-monitoring .profile .name {
   font-size: 1.5em;
   margin: 10px 0;
 }
-.profile .nim {
+
+#mod-monitoring .profile .nim {
   font-size: 1em;
   color: gray;
 }
-.report {
+
+#mod-monitoring .report {
   flex: 2;
 }
-.report table {
+
+#mod-monitoring .report table {
   width: 100%;
   max-height: 65vh;
   overflow-y: auto;
   display: block;
   border-collapse: collapse;
 }
-.report th {
+
+#mod-monitoring .report th {
   background-color: #ddd;
 }
-.report th,
-.report td {
+
+#mod-monitoring .report th,
+#mod-monitoring .report td {
   padding: 10px;
   text-align: left;
 }
-.dropdown table {
+
+#mod-monitoring .dropdown table {
   width: 100%;
   max-height: 30vh;
   overflow-x: hidden;
@@ -102,74 +115,78 @@ th {
   font-size: 0.9em;
 }
 
-.dropdown th,
-.dropdown td {
+#mod-monitoring .dropdown th,
+#mod-monitoring .dropdown td {
   padding: 8px;
   border: 1px solid #ddd;
   text-align: left;
 }
 
-.dropdown thead,
-.dropdown tbody {
+#mod-monitoring .dropdown thead,
+#mod-monitoring .dropdown tbody {
   display: table;
   width: 100%;
-  table-layout: fixed; /* Memastikan lebar kolom tetap */
+  table-layout: fixed;
 }
 
-.dropdown th:nth-child(1),
-.dropdown td:nth-child(1) {
+#mod-monitoring .dropdown th:nth-child(1),
+#mod-monitoring .dropdown td:nth-child(1) {
   width: 45%;
-} /* Detail */
-.dropdown th:nth-child(2),
-.dropdown td:nth-child(2) {
-  width: 20%;
-} /* Start Time */
-.dropdown th:nth-child(3),
-.dropdown td:nth-child(3) {
-  width: 20%;
-} /* End Time */
-.dropdown th:nth-child(4),
-.dropdown td:nth-child(4) {
-  width: 15%;
-} /* Duration */
+}
 
-.dropdown th {
+#mod-monitoring .dropdown th:nth-child(2),
+#mod-monitoring .dropdown td:nth-child(2) {
+  width: 20%;
+}
+
+#mod-monitoring .dropdown th:nth-child(3),
+#mod-monitoring .dropdown td:nth-child(3) {
+  width: 20%;
+}
+
+#mod-monitoring .dropdown th:nth-child(4),
+#mod-monitoring .dropdown td:nth-child(4) {
+  width: 15%;
+}
+
+#mod-monitoring .dropdown th {
   background-color: #f8f9fa;
   font-weight: bold;
 }
 
-.row:hover {
+#mod-monitoring .row:hover {
   background-color: #f1f1f1;
   cursor: pointer;
 }
 
-.dropdown {
+#mod-monitoring .dropdown {
   display: none;
   transition: all 0.3s ease;
 }
 
-.dropdown.visible {
+#mod-monitoring .dropdown.visible {
   display: table-row;
 }
 
-.sidebar-header {
+#mod-monitoring .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.sidebar-buttons button {
+#mod-monitoring .sidebar-buttons button {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 18px;
   margin-left: 10px;
 }
-.sidebar-buttons button:hover {
+
+#mod-monitoring .sidebar-buttons button:hover {
   color: #007bff;
 }
 
-.content-unavailable {
+#mod-monitoring .content-unavailable {
   text-align: center;
   background: #fff;
   padding: 30px;
@@ -177,7 +194,7 @@ th {
   animation: fadeIn 0.5s ease-in-out;
 }
 
-.icon {
+#mod-monitoring .icon {
   font-size: 50px;
   color: #e74c3c;
   margin-bottom: 10px;

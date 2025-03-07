@@ -30,7 +30,7 @@
         <link rel="stylesheet" href="styles.css">
         <title>Monitoring Report</title>
     </head>
-    <body>
+    <body id="mod-monitoring">
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>Students</h2>
@@ -72,7 +72,7 @@
                         <thead>
                         <tr>
                             <th>App</th>
-                            <th>Duration (sec)</th>
+                            <th>Duration</th>
                             <th>Percentage</th>
                         </tr>
                         </thead>
@@ -125,7 +125,7 @@
                     row.setAttribute("onclick", "toggleDropdown(this)");
                     row.innerHTML = `
                         <td>${appName}</td>
-                        <td>${app.duration} sec</td>
+                        <td>${formatDuration(app.duration)}</td>
                         <td>${((app.duration / totalDuration) * 100).toFixed(2)}%</td>
                     `;
                     tableBody.appendChild(row);
