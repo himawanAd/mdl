@@ -1,0 +1,171 @@
+<div
+  id="monitoring-info"
+  style="
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  "
+>
+  <strong>Monitoring Session: </strong> <span id="session-time">---</span><br />
+  <strong>Remaining Time: </strong> <span id="remaining-time">---</span><br />
+  <strong>Monitoring Status: </strong>
+  <span id="monitoring-status" style="color: gray">---</span><br />
+  <a
+    href="#"
+    id="toggle-monitoring-details"
+    style="color: blue; text-decoration: underline; cursor: pointer"
+    >How does monitoring work?</a
+  >
+  <div
+    id="monitoring-details"
+    style="
+      display: none;
+      margin-top: 10px;
+      padding: 5px;
+      border-top: 1px solid #ddd;
+    "
+  >
+    <p>
+      Monitoring is only active during the session and will automatically stop
+      when the session ends or if you leave this page.
+    </p>
+    <p>
+      The data collected only includes a list of applications used during the
+      session and their usage duration, without recording screen content within
+      the applications.
+    </p>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("session-time").textContent =
+      monitoringData.startMonitoring + " - " + monitoringData.stopMonitoring;
+
+    let monitoring = false;
+    let toggleLink = document.getElementById("toggle-monitoring-details");
+    let detailsDiv = document.getElementById("monitoring-details");
+    let remainingTimeSpan = document.getElementById("remaining-time");
+    let stopTime = monitoringData.stopTime;
+
+    function updateRemainingTime() {
+      let now = new Date().getTime();
+      let timeLeft = stopTime - now;
+
+      if (timeLeft > 0) {
+        let seconds = Math.floor((timeLeft / 1000) % 60);
+        let minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
+        let hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
+        let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+
+        remainingTimeSpan.textContent =
+          (days ? days + "d " : "") +
+          (hours ? hours + "h " : "") +
+          (minutes ? minutes + "m " : "") +
+          seconds +
+          "s";
+      } else {
+        remainingTimeSpan.textContent = "Session has ended";
+        document.getElementById("monitoring-status").textContent = "Stopped";
+        monitoring = false;
+        clearInterval(timer);
+        alert("Monitoring session has finished.");
+      }
+    }
+
+    let timer = setInterval(updateRemainingTime, 1000);
+    updateRemainingTime();
+
+    toggleLink.addEventListener("click", function (event) {
+      event.preventDefault();
+      detailsDiv.style.display =
+        detailsDiv.style.display === "none" ? "block" : "none";
+      toggleLink.textContent =
+        detailsDiv.style.display === "block"
+          ? "Hide"
+          : "How does monitoring work?";
+    });
+
+    // WebSocket logic
+    let userConfirmed = confirm(
+      `Hi, ${monitoringData.studentName} (${monitoringData.username})!\nThere is an ongoing session:\nSession: ${monitoringData.sessionName}\nTime: ${monitoringData.startMonitoring} - ${monitoringData.stopMonitoring}\n\nBy continuing, you agree to allow device activity monitoring during this session. Monitoring will automatically stop if the session ends or you leave this page.\n\nDo you agree to proceed?`
+    );
+
+    if (userConfirmed) {
+      let ws = new WebSocket("ws://localhost:8080");
+
+      ws.onopen = function () {
+        document.getElementById("monitoring-status").textContent =
+          "Connected. Request Monitoring...";
+        document.getElementById("monitoring-status").style.color = "yellow";
+
+        let data = {
+          command: "startMonitoring",
+          studentId: monitoringData.studentId,
+          sessionId: monitoringData.sessionId,
+          stopTime: monitoringData.endTime,
+        };
+        ws.send(JSON.stringify(data));
+      };
+
+      ws.onmessage = function (event) {
+        let message = event.data;
+        console.log("Message from server:", message);
+
+        if (message === "running") {
+          monitoring = true;
+          document.getElementById("monitoring-status").textContent =
+            "Monitoring";
+          document.getElementById("monitoring-status").style.color = "green";
+        } else if (message === "stopped") {
+          monitoring = false;
+          document.getElementById("monitoring-status").textContent = "Stopped";
+          document.getElementById("monitoring-status").style.color = "red";
+        } else if (message === "finish") {
+          monitoring = false;
+          document.getElementById("monitoring-status").textContent =
+            "Monitoring session has finished";
+          document.getElementById("monitoring-status").style.color = "gray";
+        }
+      };
+
+      ws.onclose = function () {
+        monitoring = false;
+        document.getElementById("monitoring-status").textContent =
+          "Not Connected";
+        document.getElementById("monitoring-status").style.color = "red";
+      };
+
+      ws.onerror = function (error) {
+        monitoring = false;
+        document.getElementById("monitoring-status").textContent = "Error";
+        document.getElementById("monitoring-status").style.color = "red";
+        console.error("WebSocket Error:", error);
+      };
+
+      window.addEventListener("beforeunload", function (event) {
+        if (!monitoring) return;
+        let userConfirmed = confirm(
+          "If you leave, this monitoring will be stopped.\n\nLeave site?"
+        );
+
+        if (!userConfirmed) {
+          event.preventDefault();
+          event.returnValue = "";
+          return false;
+        }
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          let data = JSON.stringify({ command: "stopMonitoring" });
+          navigator.sendBeacon("/stop-monitoring", data);
+          monitoring = false;
+          document.getElementById("monitoring-status").textContent =
+            "Closing Monitoring...";
+          document.getElementById("monitoring-status").style.color = "orange";
+        }
+      });
+    }
+  });
+</script>
