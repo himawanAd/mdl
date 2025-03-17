@@ -75,6 +75,23 @@
       }
     }
 
+    function sendMonitoringLog(status) {
+      fetch("/moodle/local/monitoring/log.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: monitoringData.sessionId,
+          student_id: monitoringData.studentId,
+          status: status,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => console.log("Log saved:", data))
+        .catch((error) => console.error("Error logging monitoring:", error));
+    }
+
     let timer = setInterval(updateRemainingTime, 1000);
     updateRemainingTime();
 
@@ -116,15 +133,18 @@
 
         if (message === "running") {
           monitoring = true;
+          sendMonitoringLog("accepted");
           document.getElementById("monitoring-status").textContent =
             "Monitoring";
           document.getElementById("monitoring-status").style.color = "green";
         } else if (message === "stopped") {
           monitoring = false;
+          sendMonitoringLog("left");
           document.getElementById("monitoring-status").textContent = "Stopped";
           document.getElementById("monitoring-status").style.color = "red";
         } else if (message === "finish") {
           monitoring = false;
+          sendMonitoringLog("finished");
           document.getElementById("monitoring-status").textContent =
             "Monitoring session has finished";
           document.getElementById("monitoring-status").style.color = "gray";
@@ -133,6 +153,7 @@
 
       ws.onclose = function () {
         monitoring = false;
+        sendMonitoringLog("left");
         document.getElementById("monitoring-status").textContent =
           "Not Connected";
         document.getElementById("monitoring-status").style.color = "red";
@@ -159,6 +180,7 @@
 
         if (ws && ws.readyState === WebSocket.OPEN) {
           let data = JSON.stringify({ command: "stopMonitoring" });
+          sendMonitoringLog("left");
           navigator.sendBeacon("/stop-monitoring", data);
           monitoring = false;
           document.getElementById("monitoring-status").textContent =
@@ -166,6 +188,11 @@
           document.getElementById("monitoring-status").style.color = "orange";
         }
       });
+    } else {
+      sendMonitoringLog("rejected");
+      document.getElementById("monitoring-status").textContent =
+        "You declined monitoring";
+      document.getElementById("monitoring-status").style.color = "red";
     }
   });
 </script>
