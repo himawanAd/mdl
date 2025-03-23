@@ -50,6 +50,7 @@
     let remainingTimeSpan = document.getElementById("remaining-time");
     let stopTime = monitoringData.stopTime;
 
+    // menghitung durasi sesi & mengakhiri sesi setelah waktu berakhir
     function updateRemainingTime() {
       let now = new Date().getTime();
       let timeLeft = stopTime - now;
@@ -67,14 +68,18 @@
           seconds +
           "s";
       } else {
+        // waktu sesi berakhir
         remainingTimeSpan.textContent = "Session has ended";
-        document.getElementById("monitoring-status").textContent = "Stopped";
+        document.getElementById("monitoring-status").textContent = "Finished";
+        document.getElementById("monitoring-status").style.color = "red";
         monitoring = false;
+        sendMonitoringLog("finished");
         clearInterval(timer);
         alert("Monitoring session has finished.");
       }
     }
 
+    // mengirim status monitoring (accepted, rejected, left, returned, finished)
     function sendMonitoringLog(status) {
       fetch("/moodle/local/monitoring/log.php", {
         method: "POST",
@@ -95,6 +100,7 @@
     let timer = setInterval(updateRemainingTime, 1000);
     updateRemainingTime();
 
+    // menampilkan info teknis monitoring
     toggleLink.addEventListener("click", function (event) {
       event.preventDefault();
       detailsDiv.style.display =
@@ -105,19 +111,21 @@
           : "How does monitoring work?";
     });
 
-    // WebSocket logic
+    // alert konfirmasi monitoring
     let userConfirmed = confirm(
       `Hi, ${monitoringData.studentName} (${monitoringData.username})!\nThere is an ongoing session:\nSession: ${monitoringData.sessionName}\nTime: ${monitoringData.startMonitoring} - ${monitoringData.stopMonitoring}\n\nBy continuing, you agree to allow device activity monitoring during this session. Monitoring will automatically stop if the session ends or you leave this page.\n\nDo you agree to proceed?`
     );
 
     if (userConfirmed) {
+      // jika student menerima monitoring, buat koneksi ws
       let ws = new WebSocket("ws://localhost:8080");
-
+      // fungsi ketika terkoneksi ws
       ws.onopen = function () {
         document.getElementById("monitoring-status").textContent =
           "Connected. Request Monitoring...";
         document.getElementById("monitoring-status").style.color = "yellow";
 
+        // mengirim data yang dibutuhkan untuk monitoring ke monitor.js
         let data = {
           command: "startMonitoring",
           studentId: monitoringData.studentId,
@@ -127,19 +135,40 @@
         ws.send(JSON.stringify(data));
       };
 
+      // menerima pesan dari monitor.js
       ws.onmessage = function (event) {
         let message = event.data;
         console.log("Message from server:", message);
 
         if (message === "running") {
           monitoring = true;
-          sendMonitoringLog("accepted");
-          document.getElementById("monitoring-status").textContent =
-            "Monitoring";
-          document.getElementById("monitoring-status").style.color = "green";
+          fetch(
+            `/moodle/local/monitoring/log.php?session_id=${monitoringData.sessionId}&student_id=${monitoringData.studentId}`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              let lastStatus = data.status;
+
+              if (lastStatus === "left") {
+                sendMonitoringLog("returned");
+                document.getElementById("monitoring-status").textContent =
+                  "Monitoring";
+              } else {
+                sendMonitoringLog("accepted");
+                document.getElementById("monitoring-status").textContent =
+                  "Monitoring";
+              }
+              document.getElementById("monitoring-status").style.color =
+                "green";
+            })
+            .catch((error) =>
+              console.error("Error checking last status:", error)
+            );
         } else if (message === "stopped") {
           monitoring = false;
-          sendMonitoringLog("left");
+          if (stopTime > Date().getTime()) {
+            sendMonitoringLog("left");
+          }
           document.getElementById("monitoring-status").textContent = "Stopped";
           document.getElementById("monitoring-status").style.color = "red";
         } else if (message === "finish") {
@@ -151,21 +180,29 @@
         }
       };
 
+      // fungsi ketika koneksi ws terputus
       ws.onclose = function () {
         monitoring = false;
-        sendMonitoringLog("left");
+        if (stopTime > Date().getTime()) {
+          sendMonitoringLog("left");
+        }
         document.getElementById("monitoring-status").textContent =
           "Not Connected";
         document.getElementById("monitoring-status").style.color = "red";
       };
 
+      // fungsi ketika terdapat error dalam koneksi ws
       ws.onerror = function (error) {
         monitoring = false;
+        if (stopTime > Date().getTime()) {
+          sendMonitoringLog("left");
+        }
         document.getElementById("monitoring-status").textContent = "Error";
         document.getElementById("monitoring-status").style.color = "red";
         console.error("WebSocket Error:", error);
       };
 
+      // menampilkan alert sebelum menutup/meninggalkan halaman pada saat sesi
       window.addEventListener("beforeunload", function (event) {
         if (!monitoring) return;
         let userConfirmed = confirm(
@@ -178,17 +215,15 @@
           return false;
         }
 
+        // keluar halaman akan menghentikan monitoring
         if (ws && ws.readyState === WebSocket.OPEN) {
           let data = JSON.stringify({ command: "stopMonitoring" });
-          sendMonitoringLog("left");
           navigator.sendBeacon("/stop-monitoring", data);
           monitoring = false;
-          document.getElementById("monitoring-status").textContent =
-            "Closing Monitoring...";
-          document.getElementById("monitoring-status").style.color = "orange";
         }
       });
     } else {
+      // jika student menolak monitoring
       sendMonitoringLog("rejected");
       document.getElementById("monitoring-status").textContent =
         "You declined monitoring";
