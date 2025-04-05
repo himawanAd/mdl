@@ -10,6 +10,22 @@
         [$course->id, $context->id]
     );
 
+    $status_data = $DB->get_records_sql("
+        SELECT l.student_id, l.status
+        FROM {monitoring_log} l
+        INNER JOIN (
+            SELECT student_id, MAX(logged_at) as max_logged
+            FROM {monitoring_log}
+            WHERE course_module_id = ?
+            GROUP BY student_id
+        ) latest ON l.student_id = latest.student_id AND l.logged_at = latest.max_logged
+        WHERE l.course_module_id = ?
+    ", [$cmid, $cmid]);
+
+    foreach ($students as $student) {
+        $student->status = isset($status_data[$student->id]) ? $status_data[$student->id]->status : 'No Data';
+    }
+
     $monitoring_data = $DB->get_records_sql("
         SELECT m.id, m.student_id, m.course_module_id, m.app_name, m.detail, m.start_time, m.end_time
         FROM {monitoring} m
@@ -94,10 +110,7 @@
                     <tr>
                         <th>#</th>
                         <th>Student</th>
-                        <th>App Name</th>
-                        <th>Detail</th>
-                        <th>Start Time</th>
-                        <th>End Time</th>
+                        <th>Status</th>
                     </tr>
                 `;
 
@@ -105,19 +118,15 @@
                 tableBody.innerHTML = ""; // Hapus isi sebelumnya
 
                 let index = 1;
-                monitoringData.forEach(item => {
+                students.forEach(student => {
                     // Temukan nama mahasiswa berdasarkan student_id
-                    let student = students.find(s => s.id == item.student_id);
-                    let studentName = student ? `${student.firstname} ${student.lastname}` : "Unknown";
-
+                    let studentName = `${student.firstname} ${student.lastname}`;
+                    let status = student.status ? student.status : "No Data";
                     let row = `
-                        <tr>
+                        <tr style="cursor:pointer" onclick="loadReport('${studentName}', '${student.username}', '${student.id}')">
                             <td>${index++}</td>
                             <td>${studentName}</td>
-                            <td>${item.app_name}</td>
-                            <td>${item.detail}</td>
-                            <td>${new Date(item.start_time * 1000).toLocaleString()}</td>
-                            <td>${item.end_time ? new Date(item.end_time * 1000).toLocaleString() : '-'}</td>
+                            <td>${status}</td>
                         </tr>
                     `;
                     tableBody.innerHTML += row;
@@ -167,15 +176,24 @@
                 fetch(`ajax.php?cmid=<?php echo $cmid; ?>`)
                     .then(response => response.json())
                     .then(data => {
-                        monitoringData = data; // Perbarui data monitoring
+                        monitoringData = data.monitoring;
+
+                        // Perbarui status tiap student di array students
+                        students.forEach(student => {
+                            const statusInfo = data.status[student.id];
+                            student.status = statusInfo ? statusInfo.status : "No Data";
+                        });
+
+                        // Render ulang tampilan sesuai yang sedang aktif
                         if (currentView.type === "all") {
-                            loadAllReport(); // Render ulang tabel
+                            loadAllReport();
                         } else if (currentView.type === "student"){
                             loadReport(currentView.name, currentView.nim, currentView.studentId);
                         }
                     })
                     .catch(error => console.error('Error fetching data:', error));
             }
+
 
             // Jalankan polling setiap 1 detik
             setInterval(fetchMonitoringData, 1000);
