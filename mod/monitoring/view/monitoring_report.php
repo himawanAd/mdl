@@ -10,6 +10,19 @@
         [$course->id, $context->id]
     );
 
+    $status_data = $DB->get_records_sql("
+        SELECT l.student_id, l.status
+        FROM {monitoring_log} l
+        INNER JOIN (
+            SELECT student_id, MAX(logged_at) AS max_logged
+            FROM {monitoring_log}
+            WHERE course_module_id = ?
+            GROUP BY student_id
+        ) latest ON l.student_id = latest.student_id AND l.logged_at = latest.max_logged
+        WHERE l.course_module_id = ?
+    ", [$cmid, $cmid]);
+    $status_json = json_encode($status_data);
+
     $monitoring_data = $DB->get_records_sql("
         SELECT m.id, m.student_id, m.course_module_id, m.app_name, m.detail, m.start_time, m.end_time
         FROM {monitoring} m
@@ -85,9 +98,11 @@
         </div>
         <script>
             let monitoringData = <?php echo $monitoring_json; ?>;
+            let lastStatuses = <?php echo $status_json; ?>;
             function loadReport(name, nim, studentId) {
                 document.getElementById("profileName").textContent = name;
-                document.getElementById("profileNim").textContent = nim;
+                const status = lastStatuses[studentId]?.status ?? 'No Data';
+                document.getElementById("profileNim").textContent = `${nim} — ${status}`;
                 document.getElementById("reportBox").style.display = "flex";
 
                 let tableBody = document.getElementById("reportTableBody");
