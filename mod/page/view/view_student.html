@@ -12,6 +12,30 @@
   <strong>Remaining Time: </strong> <span id="remaining-time">---</span><br />
   <strong>Monitoring Status: </strong>
   <span id="monitoring-status" style="color: gray">---</span><br />
+  <div id="stop-monitoring-container" style="display: none; margin-top: 20px">
+    <p style="color: gray; margin-bottom: 10px">
+      Before closing or leaving this page while monitoring is active, please
+      click the button below to stop monitoring properly.
+    </p>
+    <button
+      id="stop-monitoring-btn"
+      style="
+        padding: 8px 16px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      "
+      onmouseover="this.style.backgroundColor='#c82333';"
+      onmouseout="this.style.backgroundColor='#dc3545';"
+    >
+      Stop Monitoring
+    </button>
+  </div>
+  <br />
   <a
     href="#"
     id="toggle-monitoring-details"
@@ -49,6 +73,7 @@
     let detailsDiv = document.getElementById("monitoring-details");
     let remainingTimeSpan = document.getElementById("remaining-time");
     let stopTime = monitoringData.stopTime;
+    let ws = null;
 
     // menghitung durasi sesi & mengakhiri sesi setelah waktu berakhir
     function updateRemainingTime() {
@@ -72,6 +97,8 @@
         remainingTimeSpan.textContent = "Session has ended";
         document.getElementById("monitoring-status").textContent = "Finished";
         document.getElementById("monitoring-status").style.color = "red";
+        document.getElementById("stop-monitoring-container").style.display =
+          "none";
         monitoring = false;
         sendMonitoringLog("finished");
         clearInterval(timer);
@@ -118,7 +145,8 @@
 
     if (userConfirmed) {
       // jika student menerima monitoring, buat koneksi ws
-      let ws = new WebSocket("ws://localhost:8080");
+      ws = new WebSocket("ws://localhost:8080");
+
       // fungsi ketika terkoneksi ws
       ws.onopen = function () {
         document.getElementById("monitoring-status").textContent =
@@ -142,6 +170,8 @@
 
         if (message === "running") {
           monitoring = true;
+          document.getElementById("stop-monitoring-container").style.display =
+            "block";
           fetch(
             `/moodle/local/monitoring/log.php?session_id=${monitoringData.sessionId}&student_id=${monitoringData.studentId}`
           )
@@ -151,13 +181,12 @@
 
               if (lastStatus === "left") {
                 sendMonitoringLog("returned");
-                document.getElementById("monitoring-status").textContent =
-                  "Monitoring";
               } else {
                 sendMonitoringLog("accepted");
-                document.getElementById("monitoring-status").textContent =
-                  "Monitoring";
               }
+
+              document.getElementById("monitoring-status").textContent =
+                "Monitoring";
               document.getElementById("monitoring-status").style.color =
                 "green";
             })
@@ -177,6 +206,8 @@
           document.getElementById("monitoring-status").textContent =
             "Monitoring session has finished";
           document.getElementById("monitoring-status").style.color = "gray";
+          document.getElementById("stop-monitoring-container").style.display =
+            "none";
         }
       };
 
@@ -189,6 +220,8 @@
         document.getElementById("monitoring-status").textContent =
           "Not Connected";
         document.getElementById("monitoring-status").style.color = "red";
+        document.getElementById("stop-monitoring-container").style.display =
+          "none";
       };
 
       // fungsi ketika terdapat error dalam koneksi ws
@@ -200,7 +233,31 @@
         document.getElementById("monitoring-status").textContent = "Error";
         document.getElementById("monitoring-status").style.color = "red";
         console.error("WebSocket Error:", error);
+        document.getElementById("stop-monitoring-container").style.display =
+          "none";
       };
+
+      // event listener untuk tombol stop monitoring
+      document
+        .getElementById("stop-monitoring-btn")
+        .addEventListener("click", function () {
+          if (!monitoring || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+          let userConfirmed = confirm(
+            "Are you sure you want to stop monitoring early? Your instructor will be notified."
+          );
+          if (userConfirmed) {
+            ws.send(JSON.stringify({ command: "stopMonitoring" }));
+            sendMonitoringLog("left");
+            monitoring = false;
+            clearInterval(timer);
+            document.getElementById("monitoring-status").textContent =
+              "Stopped";
+            document.getElementById("monitoring-status").style.color = "red";
+            document.getElementById("stop-monitoring-container").style.display =
+              "none";
+          }
+        });
 
       // menampilkan alert sebelum menutup/meninggalkan halaman pada saat sesi
       window.addEventListener("beforeunload", function (event) {
