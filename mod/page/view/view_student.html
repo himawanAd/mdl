@@ -65,226 +65,230 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("session-time").textContent =
-      monitoringData.startMonitoring + " - " + monitoringData.stopMonitoring;
+    window.open("monapp:", "_self");
+    setTimeout(() => {
+      document.getElementById("session-time").textContent =
+        monitoringData.startMonitoring + " - " + monitoringData.stopMonitoring;
 
-    let monitoring = false;
-    let toggleLink = document.getElementById("toggle-monitoring-details");
-    let detailsDiv = document.getElementById("monitoring-details");
-    let remainingTimeSpan = document.getElementById("remaining-time");
-    let stopTime = monitoringData.stopTime;
-    let ws = null;
+      let monitoring = false;
+      let toggleLink = document.getElementById("toggle-monitoring-details");
+      let detailsDiv = document.getElementById("monitoring-details");
+      let remainingTimeSpan = document.getElementById("remaining-time");
+      let stopTime = monitoringData.stopTime;
+      let ws = null;
 
-    // menghitung durasi sesi & mengakhiri sesi setelah waktu berakhir
-    function updateRemainingTime() {
-      let now = new Date().getTime();
-      let timeLeft = stopTime - now;
+      // menghitung durasi sesi & mengakhiri sesi setelah waktu berakhir
+      function updateRemainingTime() {
+        let now = new Date().getTime();
+        let timeLeft = stopTime - now;
 
-      if (timeLeft > 0) {
-        let seconds = Math.floor((timeLeft / 1000) % 60);
-        let minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
-        let hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
-        let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        if (timeLeft > 0) {
+          let seconds = Math.floor((timeLeft / 1000) % 60);
+          let minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
+          let hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
+          let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
 
-        remainingTimeSpan.textContent =
-          (days ? days + "d " : "") +
-          (hours ? hours + "h " : "") +
-          (minutes ? minutes + "m " : "") +
-          seconds +
-          "s";
-      } else {
-        // waktu sesi berakhir
-        remainingTimeSpan.textContent = "Session has ended";
-        document.getElementById("monitoring-status").textContent = "Finished";
-        document.getElementById("monitoring-status").style.color = "red";
-        document.getElementById("stop-monitoring-container").style.display =
-          "none";
-        monitoring = false;
-        sendMonitoringLog("finished");
-        clearInterval(timer);
-        alert("Monitoring session has finished.");
-      }
-    }
-
-    // mengirim status monitoring (accepted, rejected, left, returned, finished)
-    function sendMonitoringLog(status) {
-      fetch("/moodle/local/monitoring/log.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          session_id: monitoringData.sessionId,
-          student_id: monitoringData.studentId,
-          status: status,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => console.log("Log saved:", data))
-        .catch((error) => console.error("Error logging monitoring:", error));
-    }
-
-    let timer = setInterval(updateRemainingTime, 1000);
-    updateRemainingTime();
-
-    // menampilkan info teknis monitoring
-    toggleLink.addEventListener("click", function (event) {
-      event.preventDefault();
-      detailsDiv.style.display =
-        detailsDiv.style.display === "none" ? "block" : "none";
-      toggleLink.textContent =
-        detailsDiv.style.display === "block"
-          ? "Hide"
-          : "How does monitoring work?";
-    });
-
-    // alert konfirmasi monitoring
-    let userConfirmed = confirm(
-      `Hi, ${monitoringData.studentName} (${monitoringData.username})!\nThere is an ongoing session:\nSession: ${monitoringData.sessionName}\nTime: ${monitoringData.startMonitoring} - ${monitoringData.stopMonitoring}\n\nBy continuing, you agree to allow device activity monitoring during this session. Monitoring will automatically stop if the session ends or you leave this page.\n\nDo you agree to proceed?`
-    );
-
-    if (userConfirmed) {
-      // jika student menerima monitoring, buat koneksi ws
-      ws = new WebSocket("ws://localhost:8080");
-
-      // fungsi ketika terkoneksi ws
-      ws.onopen = function () {
-        document.getElementById("monitoring-status").textContent =
-          "Connected. Request Monitoring...";
-        document.getElementById("monitoring-status").style.color = "yellow";
-
-        // mengirim data yang dibutuhkan untuk monitoring ke monitor.js
-        let data = {
-          command: "startMonitoring",
-          studentId: monitoringData.studentId,
-          sessionId: monitoringData.sessionId,
-          stopTime: monitoringData.endTime,
-        };
-        ws.send(JSON.stringify(data));
-      };
-
-      // menerima pesan dari monitor.js
-      ws.onmessage = function (event) {
-        let message = event.data;
-        console.log("Message from server:", message);
-
-        if (message === "running") {
-          monitoring = true;
+          remainingTimeSpan.textContent =
+            (days ? days + "d " : "") +
+            (hours ? hours + "h " : "") +
+            (minutes ? minutes + "m " : "") +
+            seconds +
+            "s";
+        } else {
+          // waktu sesi berakhir
+          remainingTimeSpan.textContent = "Session has ended";
+          document.getElementById("monitoring-status").textContent = "Finished";
+          document.getElementById("monitoring-status").style.color = "red";
           document.getElementById("stop-monitoring-container").style.display =
-            "block";
-          fetch(
-            `/moodle/local/monitoring/log.php?session_id=${monitoringData.sessionId}&student_id=${monitoringData.studentId}`
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              let lastStatus = data.status;
+            "none";
+          monitoring = false;
+          sendMonitoringLog("finished");
+          clearInterval(timer);
+          alert("Monitoring session has finished.");
+        }
+      }
 
-              if (lastStatus === "left") {
-                sendMonitoringLog("returned");
-              } else {
-                sendMonitoringLog("accepted");
-              }
+      // mengirim status monitoring (accepted, rejected, left, returned, finished)
+      function sendMonitoringLog(status) {
+        fetch("/moodle/local/monitoring/log.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            session_id: monitoringData.sessionId,
+            student_id: monitoringData.studentId,
+            status: status,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log("Log saved:", data))
+          .catch((error) => console.error("Error logging monitoring:", error));
+      }
 
-              document.getElementById("monitoring-status").textContent =
-                "Monitoring";
-              document.getElementById("monitoring-status").style.color =
-                "green";
-            })
-            .catch((error) =>
-              console.error("Error checking last status:", error)
-            );
-        } else if (message === "stopped") {
+      let timer = setInterval(updateRemainingTime, 1000);
+      updateRemainingTime();
+
+      // menampilkan info teknis monitoring
+      toggleLink.addEventListener("click", function (event) {
+        event.preventDefault();
+        detailsDiv.style.display =
+          detailsDiv.style.display === "none" ? "block" : "none";
+        toggleLink.textContent =
+          detailsDiv.style.display === "block"
+            ? "Hide"
+            : "How does monitoring work?";
+      });
+
+      // alert konfirmasi monitoring
+      let userConfirmed = confirm(
+        `Hi, ${monitoringData.studentName} (${monitoringData.username})!\nThere is an ongoing session:\nSession: ${monitoringData.sessionName}\nTime: ${monitoringData.startMonitoring} - ${monitoringData.stopMonitoring}\n\nBy continuing, you agree to allow device activity monitoring during this session. Monitoring will automatically stop if the session ends or you leave this page.\n\nDo you agree to proceed?`
+      );
+
+      if (userConfirmed) {
+        ws = new WebSocket("ws://localhost:8080");
+
+        // fungsi ketika terkoneksi ws
+        ws.onopen = function () {
+          document.getElementById("monitoring-status").textContent =
+            "Connected. Request Monitoring...";
+          document.getElementById("monitoring-status").style.color = "yellow";
+
+          // mengirim data yang dibutuhkan untuk monitoring ke monitor.js
+          let data = {
+            command: "startMonitoring",
+            studentId: monitoringData.studentId,
+            sessionId: monitoringData.sessionId,
+            stopTime: monitoringData.endTime,
+          };
+          ws.send(JSON.stringify(data));
+        };
+
+        // menerima pesan dari monitor.js
+        ws.onmessage = function (event) {
+          let message = event.data;
+          console.log("Message from server:", message);
+
+          if (message === "running") {
+            monitoring = true;
+            document.getElementById("stop-monitoring-container").style.display =
+              "block";
+            fetch(
+              `/moodle/local/monitoring/log.php?session_id=${monitoringData.sessionId}&student_id=${monitoringData.studentId}`
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                let lastStatus = data.status;
+
+                if (lastStatus === "left") {
+                  sendMonitoringLog("returned");
+                } else {
+                  sendMonitoringLog("accepted");
+                }
+
+                document.getElementById("monitoring-status").textContent =
+                  "Monitoring";
+                document.getElementById("monitoring-status").style.color =
+                  "green";
+              })
+              .catch((error) =>
+                console.error("Error checking last status:", error)
+              );
+          } else if (message === "stopped") {
+            monitoring = false;
+            if (stopTime > Date().getTime()) {
+              sendMonitoringLog("left");
+            }
+            document.getElementById("monitoring-status").textContent =
+              "Stopped";
+            document.getElementById("monitoring-status").style.color = "red";
+          } else if (message === "finish") {
+            monitoring = false;
+            sendMonitoringLog("finished");
+            document.getElementById("monitoring-status").textContent =
+              "Monitoring session has finished";
+            document.getElementById("monitoring-status").style.color = "gray";
+            document.getElementById("stop-monitoring-container").style.display =
+              "none";
+          }
+        };
+
+        // fungsi ketika koneksi ws terputus
+        ws.onclose = function () {
           monitoring = false;
           if (stopTime > Date().getTime()) {
             sendMonitoringLog("left");
           }
-          document.getElementById("monitoring-status").textContent = "Stopped";
-          document.getElementById("monitoring-status").style.color = "red";
-        } else if (message === "finish") {
-          monitoring = false;
-          sendMonitoringLog("finished");
           document.getElementById("monitoring-status").textContent =
-            "Monitoring session has finished";
-          document.getElementById("monitoring-status").style.color = "gray";
+            "Not Connected";
+          document.getElementById("monitoring-status").style.color = "red";
           document.getElementById("stop-monitoring-container").style.display =
             "none";
-        }
-      };
+        };
 
-      // fungsi ketika koneksi ws terputus
-      ws.onclose = function () {
-        monitoring = false;
-        if (stopTime > Date().getTime()) {
-          sendMonitoringLog("left");
-        }
-        document.getElementById("monitoring-status").textContent =
-          "Not Connected";
-        document.getElementById("monitoring-status").style.color = "red";
-        document.getElementById("stop-monitoring-container").style.display =
-          "none";
-      };
-
-      // fungsi ketika terdapat error dalam koneksi ws
-      ws.onerror = function (error) {
-        monitoring = false;
-        if (stopTime > Date().getTime()) {
-          sendMonitoringLog("left");
-        }
-        document.getElementById("monitoring-status").textContent = "Error";
-        document.getElementById("monitoring-status").style.color = "red";
-        console.error("WebSocket Error:", error);
-        document.getElementById("stop-monitoring-container").style.display =
-          "none";
-      };
-
-      // event listener untuk tombol stop monitoring
-      document
-        .getElementById("stop-monitoring-btn")
-        .addEventListener("click", function () {
-          if (!monitoring || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-          let userConfirmed = confirm(
-            "Are you sure you want to stop monitoring early? Your instructor will be notified."
-          );
-          if (userConfirmed) {
-            ws.send(JSON.stringify({ command: "stopMonitoring" }));
+        // fungsi ketika terdapat error dalam koneksi ws
+        ws.onerror = function (error) {
+          monitoring = false;
+          if (stopTime > Date().getTime()) {
             sendMonitoringLog("left");
+          }
+          document.getElementById("monitoring-status").textContent = "Error";
+          document.getElementById("monitoring-status").style.color = "red";
+          console.error("WebSocket Error:", error);
+          document.getElementById("stop-monitoring-container").style.display =
+            "none";
+        };
+
+        // event listener untuk tombol stop monitoring
+        document
+          .getElementById("stop-monitoring-btn")
+          .addEventListener("click", function () {
+            if (!monitoring || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+            let userConfirmed = confirm(
+              "Are you sure you want to stop monitoring early? Your instructor will be notified."
+            );
+            if (userConfirmed) {
+              ws.send(JSON.stringify({ command: "stopMonitoring" }));
+              sendMonitoringLog("left");
+              monitoring = false;
+              clearInterval(timer);
+              document.getElementById("monitoring-status").textContent =
+                "Stopped";
+              document.getElementById("monitoring-status").style.color = "red";
+              document.getElementById(
+                "stop-monitoring-container"
+              ).style.display = "none";
+            }
+          });
+
+        // menampilkan alert sebelum menutup/meninggalkan halaman pada saat sesi
+        window.addEventListener("beforeunload", function (event) {
+          if (!monitoring) return;
+          let userConfirmed = confirm(
+            "If you leave, this monitoring will be stopped.\n\nLeave site?"
+          );
+
+          if (!userConfirmed) {
+            event.preventDefault();
+            event.returnValue = "";
+            return false;
+          }
+
+          // keluar halaman akan menghentikan monitoring
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            let data = JSON.stringify({ command: "stopMonitoring" });
+            navigator.sendBeacon("/stop-monitoring", data);
             monitoring = false;
-            clearInterval(timer);
-            document.getElementById("monitoring-status").textContent =
-              "Stopped";
-            document.getElementById("monitoring-status").style.color = "red";
-            document.getElementById("stop-monitoring-container").style.display =
-              "none";
           }
         });
-
-      // menampilkan alert sebelum menutup/meninggalkan halaman pada saat sesi
-      window.addEventListener("beforeunload", function (event) {
-        if (!monitoring) return;
-        let userConfirmed = confirm(
-          "If you leave, this monitoring will be stopped.\n\nLeave site?"
-        );
-
-        if (!userConfirmed) {
-          event.preventDefault();
-          event.returnValue = "";
-          return false;
-        }
-
-        // keluar halaman akan menghentikan monitoring
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          let data = JSON.stringify({ command: "stopMonitoring" });
-          navigator.sendBeacon("/stop-monitoring", data);
-          monitoring = false;
-        }
-      });
-    } else {
-      // jika student menolak monitoring
-      sendMonitoringLog("rejected");
-      document.getElementById("monitoring-status").textContent =
-        "You declined monitoring";
-      document.getElementById("monitoring-status").style.color = "red";
-    }
+      } else {
+        // jika student menolak monitoring
+        sendMonitoringLog("rejected");
+        document.getElementById("monitoring-status").textContent =
+          "You declined monitoring";
+        document.getElementById("monitoring-status").style.color = "red";
+      }
+    }, 3000);
   });
 </script>
