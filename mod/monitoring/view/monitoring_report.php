@@ -30,7 +30,29 @@
         [$cmid], 0, 0
     );
 
-    $monitoring_json = json_encode(array_values($monitoring_data));
+    // Periksa end_time pada monitoring_data
+    $monitoring_array = array_values($monitoring_data);
+    usort($monitoring_array, function($a, $b) {
+        if ($a->student_id === $b->student_id) {
+            return $a->start_time <=> $b->start_time;
+        }
+        return $a->student_id <=> $b->student_id;
+    });
+    for ($i = 0; $i < count($monitoring_array) - 1; $i++) {
+        $current = $monitoring_array[$i];
+        $next = $monitoring_array[$i + 1];
+
+        if (empty($current->end_time) && $current->student_id == $next->student_id) {
+            $monitoring_array[$i]->end_time = $next->start_time;
+        }
+    }
+    for ($i = 0; $i < count($monitoring_array); $i++) {
+        if (empty($monitoring_array[$i]->end_time)) {
+            $monitoring_array[$i]->end_time = $stop_time;
+        }
+    }
+
+    $monitoring_json = json_encode($monitoring_array);
 ?>
 
 <!DOCTYPE html>

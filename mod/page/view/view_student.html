@@ -53,19 +53,20 @@
   >
     <p>
       Monitoring is only active during the session and will automatically stop
-      when the session ends or if you leave this page.
+      when the session ends or the monitoring page is closed.
     </p>
     <p>
-      The data collected only includes a list of applications used during the
-      session and their usage duration, without recording screen content within
-      the applications.
+      The system only collects active application window data during the
+      session, including the window title, application name, and timestamps when
+      it was active. It does not record screen content or activities within the
+      applications.
     </p>
   </div>
 </div>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    window.open("monapp:", "_self");
+    window.open("monapp:run", "_self");
     setTimeout(() => {
       document.getElementById("session-time").textContent =
         monitoringData.startMonitoring + " - " + monitoringData.stopMonitoring;
@@ -289,6 +290,6 @@
           "You declined monitoring";
         document.getElementById("monitoring-status").style.color = "red";
       }
-    }, 3000);
+    }, 5000);
   });
 </script>
