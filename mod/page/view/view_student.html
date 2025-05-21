@@ -111,7 +111,7 @@
 
       // mengirim status monitoring (accepted, rejected, left, returned, finished)
       function sendMonitoringLog(status) {
-        fetch("/moodle/local/monitoring/log.php", {
+        fetch("/local/monitoring/log.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -147,35 +147,31 @@
       );
 
       if (userConfirmed) {
-        ws = new WebSocket("ws://localhost:8080");
-
-        // fungsi ketika terkoneksi ws
-        ws.onopen = function () {
-          document.getElementById("monitoring-status").textContent =
-            "Connected. Request Monitoring...";
-          document.getElementById("monitoring-status").style.color = "yellow";
-
-          // mengirim data yang dibutuhkan untuk monitoring ke monitor.js
-          let data = {
-            command: "startMonitoring",
-            studentId: monitoringData.studentId,
-            sessionId: monitoringData.sessionId,
-            stopTime: monitoringData.endTime,
-          };
-          ws.send(JSON.stringify(data));
-        };
+        document.getElementById("monitoring-status").textContent =
+          "Connected. Request Monitoring...";
+        document.getElementById("monitoring-status").style.color = "yellow";
+        ws = new WebSocket("ws://localhost:51107");
 
         // menerima pesan dari monitor.js
         ws.onmessage = function (event) {
           let message = event.data;
           console.log("Message from server:", message);
 
-          if (message === "running") {
+          if (message === "ready") {
+            // mengirim data yang dibutuhkan untuk monitoring ke monitor.js
+            let data = {
+              command: "startMonitoring",
+              studentId: monitoringData.studentId,
+              sessionId: monitoringData.sessionId,
+              stopTime: monitoringData.endTime,
+            };
+            ws.send(JSON.stringify(data));
+          } else if (message === "running") {
             monitoring = true;
             document.getElementById("stop-monitoring-container").style.display =
               "block";
             fetch(
-              `/moodle/local/monitoring/log.php?session_id=${monitoringData.sessionId}&student_id=${monitoringData.studentId}`
+              `/local/monitoring/log.php?session_id=${monitoringData.sessionId}&student_id=${monitoringData.studentId}`
             )
               .then((response) => response.json())
               .then((data) => {
@@ -290,6 +286,6 @@
           "You declined monitoring";
         document.getElementById("monitoring-status").style.color = "red";
       }
-    }, 5000);
+    }, 1000);
   });
 </script>
