@@ -193,7 +193,7 @@
               );
           } else if (message === "stopped") {
             monitoring = false;
-            if (stopTime > Date().getTime()) {
+            if (stopTime > new Date().getTime()) {
               sendMonitoringLog("left");
             }
             document.getElementById("monitoring-status").textContent =
@@ -213,7 +213,7 @@
         // fungsi ketika koneksi ws terputus
         ws.onclose = function () {
           monitoring = false;
-          if (stopTime > Date().getTime()) {
+          if (stopTime > new Date().getTime()) {
             sendMonitoringLog("left");
           }
           document.getElementById("monitoring-status").textContent =
@@ -226,7 +226,7 @@
         // fungsi ketika terdapat error dalam koneksi ws
         ws.onerror = function (error) {
           monitoring = false;
-          if (stopTime > Date().getTime()) {
+          if (stopTime > new Date().getTime()) {
             sendMonitoringLog("left");
           }
           document.getElementById("monitoring-status").textContent = "Error";
