@@ -1137,3 +1137,9 @@ $string['attemptsdeleted'] = 'Quiz attempts deleted';
 $string['gradesdeleted'] = 'Quiz grades deleted';
 $string['useroverridesdeleted'] = 'User overrides deleted';
 $string['groupoverridesdeleted'] = 'Group overrides deleted';
+
+// Monitoring
+$string['monitoring'] = 'Monitoring';
+$string['monitoringheader'] = 'Device Activity Monitoring';
+$string['monitoringenabled'] = 'Enable monitoring';
+$string['monitoringenableddesc'] = 'If checked, student devices will be monitored while the quiz is being attempted.';

@@ -69,6 +69,10 @@ class mod_quiz_mod_form extends moodleform_mod {
         $quizconfig = get_config('quiz');
         $mform = $this->_form;
 
+        // Ambil instance data jika ada (untuk edit form)More actions
+        $instance = isset($this->_instance) ? $this->_instance : null;
+        $cmid = isset($this->_cm) ? $this->_cm->id : 0;
+
         // -------------------------------------------------------------------------------
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
@@ -114,6 +118,17 @@ class mod_quiz_mod_form extends moodleform_mod {
                 ['optional' => true]);
         $mform->addHelpButton('graceperiod', 'graceperiod', 'quiz');
         $mform->hideIf('graceperiod', 'overduehandling', 'neq', 'graceperiod');
+
+        // -------------------------------------------------------------------------------
+        // Monitoring Settings
+        $mform->addElement('header', 'monitoring', get_string('monitoringheader', 'quiz'));
+        $mform->addElement('advcheckbox', 'monitoringenabled', get_string('monitoringenabled', 'quiz'), get_string('monitoringenableddesc', 'quiz'));
+        if ($instance && $cmid) {
+            $record = $DB->get_record('course_modules', ['id' => $cmid], 'monitoring_enabled');
+            $mform->setDefault('monitoringenabled', $record->monitoring_enabled);
+        } else {
+            $mform->setDefault('monitoringenabled', 0);
+        }
 
         // -------------------------------------------------------------------------------
         // Grade settings.

@@ -138,5 +138,18 @@ function xmldb_quiz_upgrade($oldversion) {
     // Automatically generated Moodle v4.5.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2025062100) {
+
+        $table = new xmldb_table('quiz');
+        $field = new xmldb_field('monitoringenabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+
+        // Add field to table if it does not exist
+        if (!$DB->get_manager()->field_exists($table, $field)) {
+            $DB->get_manager()->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2025062100, 'quiz');
+    }
+    
     return true;
 }

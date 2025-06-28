@@ -99,6 +99,9 @@ function quiz_add_instance($quiz) {
     global $DB;
     $cmid = $quiz->coursemodule;
 
+    // Monitoring
+    $quiz->monitoringenabled = isset($quiz->monitoringenabled) ? 1 : 0;
+
     // Process the options from the form.
     $quiz->timecreated = time();
     $result = quiz_process_options($quiz);
@@ -149,6 +152,9 @@ function quiz_update_instance($quiz, $mform) {
     // Update the database.
     $quiz->id = $quiz->instance;
     $DB->update_record('quiz', $quiz);
+
+    // Monitoring
+    $quiz->monitoringenabled = isset($quiz->monitoringenabled) ? 1 : 0;
 
     // Do the processing required after an add or an update.
     quiz_after_add_or_update($quiz);
