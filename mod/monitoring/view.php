@@ -28,6 +28,26 @@
         die("Monitoring schedule not found.");
     }
 
+    // Logika tampilan pada quiz
+    if ($modulename === 'quiz') {
+        // Ambil semua attempt untuk quiz ini
+        $inprogress = $DB->record_exists_select('quiz_attempts', 
+            'quiz = :quizid AND (state = :inprogress OR state = :overdue)', 
+            [
+                'quizid' => $instanceid,
+                'inprogress' => 'inprogress',
+                'overdue' => 'overdue'
+            ]
+        );
+    
+        if ($inprogress) {
+            require_once(__DIR__ . '/view/monitoring_live.php');
+        } else {
+            require_once(__DIR__ . '/view/monitoring_report.php');
+        }
+        exit;
+    }    
+
     $current_time = time();
     $start_time = $cm->start_monitoring;
     $stop_time = $cm->stop_monitoring;
