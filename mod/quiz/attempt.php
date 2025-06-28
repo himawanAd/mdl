@@ -147,4 +147,12 @@ if ($attemptobj->is_last_page($page)) {
     $nextpage = $page + 1;
 }
 
+// Monitoring
+$quiz = $attemptobj->get_quiz();
+$monitoringenabled = !empty($quiz->monitoringenabled);
+
+if ($monitoringenabled && !$attemptobj->is_preview_user()) {
+    $PAGE->requires->js_init_code("window.open('monapp:run', '_self');");
+}
+
 echo $output->attempt_page($attemptobj, $page, $accessmanager, $messages, $slots, $id, $nextpage);
