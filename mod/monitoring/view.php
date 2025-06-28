@@ -3,7 +3,7 @@
     require_once($CFG->libdir . '/accesslib.php');
 
     $cmid = required_param('id', PARAM_INT);
-    $cm = get_coursemodule_from_id('page', $cmid, 0, false, MUST_EXIST);
+    $cm = get_coursemodule_from_id(null, $cmid, 0, false, MUST_EXIST);
     $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
     $context = context_course::instance($course->id);
     require_login($course->id);
@@ -14,7 +14,7 @@
     $instanceid = $cm->instance; 
     $activity_title = "";
     if ($DB->get_manager()->table_exists($modulename)) {
-        $activity = $DB->get_record($modulename, ['id' => $instanceid]);
+        $activity = $DB->get_record($modulename, ['id' => $instanceid], '*', MUST_EXIST);
         if ($activity && isset($activity->name)) {
             $activity_title = $activity->name;
         }

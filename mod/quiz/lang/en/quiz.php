@@ -1143,3 +1143,4 @@ $string['monitoring'] = 'Monitoring';
 $string['monitoringheader'] = 'Device Activity Monitoring';
 $string['monitoringenabled'] = 'Enable monitoring';
 $string['monitoringenableddesc'] = 'If checked, student devices will be monitored while the quiz is being attempted.';
+$string['monitoringreport'] = 'Monitoring Report';

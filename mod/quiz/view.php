@@ -275,6 +275,15 @@ if (!empty($gradinginfo->errors)) {
     }
 }
 
+if (!isguestuser() && $quiz->monitoringenabled && has_capability('mod/quiz:viewreports', $context)) {
+    // Tampilkan tombol Monitoring Report
+    echo $OUTPUT->single_button(
+        new moodle_url('/mod/monitoring/view.php', ['id' => $cm->id, 'type' => 'quiz']),
+        get_string('monitoringreport', 'quiz'),
+        'get'
+    );
+}
+
 if (isguestuser()) {
     // Guests can't do a quiz, so offer them a choice of logging in or going back.
     echo $output->view_page_guest($course, $quiz, $cm, $context, $viewobj->infomessages, $viewobj);
