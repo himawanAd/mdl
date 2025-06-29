@@ -152,7 +152,22 @@ $quiz = $attemptobj->get_quiz();
 $monitoringenabled = !empty($quiz->monitoringenabled);
 
 if ($monitoringenabled && !$attemptobj->is_preview_user()) {
-    $PAGE->requires->js_init_code("window.open('monapp:run', '_self');");
+    $PAGE->requires->js('/mod/quiz/monitoring/attempt.js');
+
+    // Data untuk monitoring
+    $student = $USER;
+    $sessionId = $attemptobj->get_attemptid(); // gunakan ID attempt sebagai session ID
+    $studentData = [
+        'studentId' => $student->id,
+        'studentName' => fullname($student),
+        'username' => $student->username,
+        'quizName' => format_string($attemptobj->get_quiz()->name),
+        'sessionId' => $sessionId,
+        'endTime' => $attemptobj->get_attempt()->timelimit ?
+                      ($attemptobj->get_attempt()->timestart + $attemptobj->get_attempt()->timelimit) * 1000 :
+                      null
+    ];
+    $PAGE->requires->js_init_code("window.monitoringData = " . json_encode($studentData) . ";");
 }
 
 echo $output->attempt_page($attemptobj, $page, $accessmanager, $messages, $slots, $id, $nextpage);
